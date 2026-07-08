@@ -24,6 +24,7 @@ public:
         const double price,
         OrderType type,
         Side side,
+        const long long sequence,
         const std::chrono::system_clock::time_point timestamp)
         : id(id),
           qty(qty),
@@ -31,6 +32,7 @@ public:
           price(price),
           type(type),
           side(side),
+          sequence(sequence),
           timestamp(timestamp)
     {
     }
@@ -71,6 +73,10 @@ public:
         return price;
     }
 
+    auto getSequence() const {
+        return sequence;
+    }
+
     // Methods
     bool execute(long long qty)
     {
@@ -92,5 +98,6 @@ private:
     const double price;
     OrderType type;
     Side side;
+    const long long sequence;
     const std::chrono::system_clock::time_point timestamp;
 };

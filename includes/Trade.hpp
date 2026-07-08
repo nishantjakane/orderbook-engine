@@ -57,6 +57,10 @@ public:
         return timestamp;
     }
 
+    auto &getSequence() const{
+        return sequence;
+    }
+
 private:
     const std::string tradeId;
     const std::string buyOrderId;
