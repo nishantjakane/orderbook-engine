@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <chrono>
 
 class Trade
 {
@@ -12,13 +13,15 @@ public:
         const std::string &sellOrderId,
         double price,
         long long qty,
-        const std::string &time)
+        long long sequence,
+        const std::chrono::system_clock::time_point &timestamp)
         : tradeId(tradeId),
           buyOrderId(buyOrderId),
           sellOrderId(sellOrderId),
           price(price),
           qty(qty),
-          time(time)
+          sequence(sequence),
+          timestamp(timestamp)
     {
     }
 
@@ -49,9 +52,9 @@ public:
         return qty;
     }
 
-    const std::string &getTime() const
+    auto &getTime() const
     {
-        return time;
+        return timestamp;
     }
 
 private:
@@ -60,5 +63,6 @@ private:
     const std::string sellOrderId;
     const double price;
     const long long qty;
-    const std::string time;
+    const long long sequence;
+    const std::chrono::system_clock::time_point timestamp;
 };

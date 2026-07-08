@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <chrono>
 
 enum class OrderType
 {
@@ -23,24 +24,24 @@ public:
         const double price,
         OrderType type,
         Side side,
-        const std::string &time)
+        const std::chrono::system_clock::time_point timestamp)
         : id(id),
           qty(qty),
           remainingQty(qty),
           price(price),
           type(type),
           side(side),
-          time(time)
+          timestamp(timestamp)
     {
     }
     // Getters
 
-    std::string getID() const
+    std::string getId() const
     {
         return id;
     }
 
-    long long getQTY() const
+    long long getQty() const
     {
         return qty;
     }
@@ -60,9 +61,9 @@ public:
         return side;
     }
 
-    std::string getTime() const
+    auto getTime() const
     {
-        return time;
+        return timestamp;
     }
 
     double getPrice() const
@@ -91,5 +92,5 @@ private:
     const double price;
     OrderType type;
     Side side;
-    const std::string time;
+    const std::chrono::system_clock::time_point timestamp;
 };
