@@ -94,6 +94,14 @@ public:
     }
 
 
+    bool isEmptyBids(){
+        return bids.empty();
+    }
+
+    bool isEmptyAsks(){
+        return asks.empty();
+    }
+
 
 private:
     std::map<double,std::deque<Order>,std::greater<double>> bids;
