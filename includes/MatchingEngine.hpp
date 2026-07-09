@@ -15,6 +15,10 @@ public:
         return "T" + std::to_string(tradeIdGenerator.generate());
     }
 
+    auto generateSequence(){
+        return sequenceGenerator.generate();
+    }
+
     // Getters
     const auto &getOrderBook() const{
         return orderBook;
