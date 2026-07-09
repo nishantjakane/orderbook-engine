@@ -19,13 +19,13 @@ class Order
 {
 public:
     Order(
-        const std::string &id,
-        const long long qty,
-        const double price,
+        std::string id,
+        long long qty,
+        double price,
         OrderType type,
         Side side,
-        const long long sequence,
-        const std::chrono::system_clock::time_point timestamp)
+        long long sequence,
+        std::chrono::system_clock::time_point timestamp)
         : id(id),
           qty(qty),
           remainingQty(qty),
@@ -92,12 +92,12 @@ public:
     bool isFilled() const {return remainingQty==0;}
 
 private:
-    const std::string id;
-    const long long qty;
+    std::string id;
+    long long qty;
     long long remainingQty;
-    const double price;
+    double price;
     OrderType type;
     Side side;
-    const long long sequence;
-    const std::chrono::system_clock::time_point timestamp;
+    long long sequence;
+    std::chrono::system_clock::time_point timestamp;
 };
