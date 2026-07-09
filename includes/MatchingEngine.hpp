@@ -15,6 +15,15 @@ public:
         return "T" + std::to_string(tradeIdGenerator.generate());
     }
 
+    // Getters
+    const auto &getOrderBook() const{
+        return orderBook;
+    }
+
+    const auto &getTrades() const{
+        return trades;
+    }
+
     void submitOrder(Order &order){
         auto side = order.getSide();
         auto price = order.getPrice();
@@ -73,6 +82,9 @@ public:
                     auto bestBid = bestBuyOrder.getPrice();
                     auto currentTime = std::chrono::system_clock::now();
 
+                    if((price>bestBuyOrder.getPrice())){
+                        break;
+                    }
                     
                     long long tradeQty = std::min(remainingQty,buyOrderQty);
 
@@ -146,10 +158,6 @@ public:
                     auto buyOrderQty = bestBuyOrder.getRemainingQty();
                     auto bestBid = bestBuyOrder.getPrice();
                     auto currentTime = std::chrono::system_clock::now();
-
-                    if((price>bestBuyOrder.getPrice()||order.getRemainingQty()==0)){
-                        break;
-                    }
                     
                     long long tradeQty = std::min(remainingQty,buyOrderQty);
 
