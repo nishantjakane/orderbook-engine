@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <algorithm>
+#include <chrono>
 
 #include "Order.hpp"
 #include "OrderBook.hpp"
@@ -10,67 +11,48 @@
 class MatchingEngine{
 public:
 
-    std::string tradeIdString(){
+    std::string generateTradeId(){
         return "T" + std::to_string(tradeIdGenerator.generate());
     }
-
 
     void submitOrder(Order &order){
         auto side = order.getSide();
         auto price = order.getPrice();
         auto orderType = order.getOrderType();
 
+
+        // Limit order logic
         if(orderType==OrderType::Limit){
             if (side == Side::Buy){
-                if(orderBook.isEmptyAsks()){
-                    orderBook.addOrder(order);
-                    return;
-                }
-
-                auto &bestSellOrder = *orderBook.getBestSellOrder();
-                
                 // handles the trade execution till best price or qty becomes 0
 
-                while(!orderBook.isEmptyAsks()&&price>=bestSellOrder.getPrice()&&order.getRemainingQty()>0){
+                while(!(orderBook.isEmptyAsks()||order.isFilled())){
                     auto &bestSellOrder = *orderBook.getBestSellOrder();
                     auto remainingQty = order.getRemainingQty();
                     auto sellOrderQty = bestSellOrder.getRemainingQty();
                     auto bestAsk = bestSellOrder.getPrice();
                     auto currentTime = std::chrono::system_clock::now();
-                    
-                    if(remainingQty<=sellOrderQty){ 
-                        Trade trade(
-                            tradeIdString(),
-                            order.getId(),
-                            bestSellOrder.getId(),
-                            bestAsk,
-                            remainingQty,
-                            sequenceGenerator.generate(),
-                            currentTime
-                        );
 
-                        trades.push_back(trade);
-
-                        order.execute(remainingQty);
-                        bestSellOrder.execute(remainingQty);
-                    
-                    }else{
-                        Trade trade(
-                            tradeIdString(),
-                            order.getId(),
-                            bestSellOrder.getId(),
-                            bestAsk,
-                            sellOrderQty,
-                            sequenceGenerator.generate(),
-                            currentTime
-                        );
-
-                        trades.push_back(trade);
-                    
-                        order.execute(sellOrderQty);
-                        bestSellOrder.execute(sellOrderQty);
-                    
+                    if((price<bestSellOrder.getPrice())){
+                        break;
                     }
+                    
+                    long long tradeQty = std::min(remainingQty,sellOrderQty);
+
+
+                    Trade trade(
+                        generateTradeId(),
+                        order.getId(),
+                        bestSellOrder.getId(),
+                        bestAsk,
+                        tradeQty,
+                        sequenceGenerator.generate(),
+                        currentTime
+                    );
+                    trades.push_back(trade);
+                    
+                    order.execute(tradeQty);
+                    bestSellOrder.execute(tradeQty);
                     
                     orderBook.removeFilledOrders();
                 }
@@ -81,16 +63,9 @@ public:
                 }
             }
             else if(side == Side::Sell){
-                if(orderBook.isEmptyBids()){
-                    orderBook.addOrder(order);
-                    return;
-                }
-
-                auto &bestBuyOrder= *orderBook.getBestBuyOrder();
-
                 // handles the trade execution till best price or qty becomes 0
 
-                while(!orderBook.isEmptyBids()){
+                while(!(orderBook.isEmptyBids()||order.isFilled())){
                     
                     auto &bestBuyOrder = *orderBook.getBestBuyOrder();
                     auto remainingQty = order.getRemainingQty();
@@ -98,43 +73,23 @@ public:
                     auto bestBid = bestBuyOrder.getPrice();
                     auto currentTime = std::chrono::system_clock::now();
 
-                    if(!(price<=bestBuyOrder.getPrice()||order.getRemainingQty()>0)){
-                        break;
-                    }
                     
-                    if(remainingQty<=buyOrderQty){
-                        Trade trade(
-                            tradeIdString(),
-                            bestBuyOrder.getId(),
-                            order.getId(),
-                            bestBid,
-                            remainingQty,
-                            sequenceGenerator.generate(),
-                            currentTime
-                        );
-                    
-                        trades.push_back(trade);
+                    long long tradeQty = std::min(remainingQty,buyOrderQty);
 
-                        order.execute(remainingQty);
-                        bestBuyOrder.execute(remainingQty);
-                    
-                    }else{
-                        Trade trade(
-                            tradeIdString(),
-                            bestBuyOrder.getId(),
-                            order.getId(),
-                            bestBid,
-                            buyOrderQty,
-                            sequenceGenerator.generate(),
-                            currentTime
-                        );
+                    Trade trade(
+                        generateTradeId(),
+                        bestBuyOrder.getId(),
+                        order.getId(),
+                        bestBid,
+                        tradeQty,
+                        sequenceGenerator.generate(),
+                        currentTime
+                    );
+                
+                    trades.push_back(trade);
 
-                        trades.push_back(trade);
-                    
-                        order.execute(buyOrderQty);
-                        bestBuyOrder.execute(buyOrderQty);
-                    
-                    }
+                    order.execute(tradeQty);
+                    bestBuyOrder.execute(tradeQty);                    
                     
                     orderBook.removeFilledOrders();
                 }
@@ -149,7 +104,76 @@ public:
             return;
         
         }
+    
+
+        //Market order logic only change from limit is that remaining qty is not added to orderbook
+        else if(orderType==OrderType::Market){
+            
+            if(side==Side::Buy){
+                while(!(orderBook.isEmptyAsks()||order.isFilled())){
+                    auto &bestSellOrder = *orderBook.getBestSellOrder();
+                    auto remainingQty = order.getRemainingQty();
+                    auto sellOrderQty = bestSellOrder.getRemainingQty();
+                    auto bestAsk = bestSellOrder.getPrice();
+                    auto currentTime = std::chrono::system_clock::now();
+
+                    long long tradeQty = std::min(remainingQty,sellOrderQty);
+
+
+                    Trade trade(
+                        generateTradeId(),
+                        order.getId(),
+                        bestSellOrder.getId(),
+                        bestAsk,
+                        tradeQty,
+                        sequenceGenerator.generate(),
+                        currentTime
+                    );
+                    trades.push_back(trade);
+                    
+                    order.execute(tradeQty);
+                    bestSellOrder.execute(tradeQty);
+                    
+                    orderBook.removeFilledOrders();
+                }
+            }
+            
+            else if(side == Side::Sell){
+                // handles the trade execution till best price or qty becomes 0
+                while(!(orderBook.isEmptyBids()||order.isFilled())){
+                    auto &bestBuyOrder = *orderBook.getBestBuyOrder();
+                    auto remainingQty = order.getRemainingQty();
+                    auto buyOrderQty = bestBuyOrder.getRemainingQty();
+                    auto bestBid = bestBuyOrder.getPrice();
+                    auto currentTime = std::chrono::system_clock::now();
+
+                    if((price>bestBuyOrder.getPrice()||order.getRemainingQty()==0)){
+                        break;
+                    }
+                    
+                    long long tradeQty = std::min(remainingQty,buyOrderQty);
+
+                    Trade trade(
+                        generateTradeId(),
+                        bestBuyOrder.getId(),
+                        order.getId(),
+                        bestBid,
+                        tradeQty,
+                        sequenceGenerator.generate(),
+                        currentTime
+                    );
+                
+                    trades.push_back(trade);
+
+                    order.execute(tradeQty);
+                    bestBuyOrder.execute(tradeQty);                    
+                    
+                    orderBook.removeFilledOrders();
+                }
+            }
+        }
     }
+
 
 private:
 
@@ -157,7 +181,6 @@ private:
 
     std::vector<Trade> trades;
 
-    IdGenerator orderIdGenerator;
     IdGenerator tradeIdGenerator;
     IdGenerator sequenceGenerator;
 };
