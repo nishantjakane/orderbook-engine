@@ -4,6 +4,7 @@
 #include <deque>
 #include <functional>
 #include<optional>
+#include <vector>
 
 #include "Order.hpp"
 
@@ -91,6 +92,38 @@ public:
                 ++levelit;
             }
         }
+    }
+
+    auto getBidsLevels() const{
+        std::vector<std::pair<double,long long>> levels;
+        for(auto level : bids){
+            auto &orders = level.second;
+            auto &levelPrice = level.first;
+            long long levelQty = 0;
+            for(auto &order : orders){
+                levelQty+=order.getRemainingQty();
+            }
+
+            levels.push_back({levelPrice , levelQty});
+        }
+
+        return levels;
+    }
+
+    auto getAsksLevels() const{
+        std::vector<std::pair<double,long long>> levels;
+        for(auto level : asks){
+            auto &orders = level.second;
+            auto &levelPrice = level.first;
+            long long levelQty = 0;
+            for(auto &order : orders){
+                levelQty+=order.getRemainingQty();
+            }
+
+            levels.push_back({levelPrice , levelQty});
+        }
+
+        return levels;
     }
 
 
