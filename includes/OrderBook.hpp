@@ -5,14 +5,15 @@
 #include <functional>
 #include<optional>
 #include <vector>
+#include <memory>
 
 #include "Order.hpp"
 
 class OrderBook{
 public:
-    void addOrder(const Order &order){
-        auto side = order.getSide();
-        auto price = order.getPrice();
+    void addOrder(std::shared_ptr<Order> &order){
+        auto side = order->getSide();
+        auto price = order->getPrice();
 
         if(side==Side::Buy){
             bids[price].push_back(order);
@@ -39,18 +40,18 @@ public:
 
 
     // Returns a order pointer so we need to dereference
-    Order* getBestBuyOrder(){
+    std::shared_ptr<Order> getBestBuyOrder(){
         if(bids.empty()){
             return nullptr;
         }
-        return &bids.begin()->second[0];
+        return bids.begin()->second[0];
     }
 
-    Order* getBestSellOrder(){
+    std::shared_ptr<Order> getBestSellOrder(){
         if(asks.empty()){
             return nullptr;
         }
-        return &asks.begin()->second[0];
+        return asks.begin()->second[0];
     }
 
     void removeFilledOrders(){
@@ -59,7 +60,7 @@ public:
             auto &orders = level.second;
 
             for(auto it=orders.begin();it!=orders.end();){
-                if(it->isFilled()){
+                if((*it)->isFilled()){
                     it=orders.erase(it);
                 }else{
                     ++it;
@@ -79,7 +80,7 @@ public:
 
 
             for(auto it=orders.begin();it!=orders.end();){
-                if(it->isFilled()){
+                if((*it)->isFilled()){
                     it=orders.erase(it);
                 }else{
                     ++it;
@@ -101,7 +102,7 @@ public:
             auto &levelPrice = level.first;
             long long levelQty = 0;
             for(auto &order : orders){
-                levelQty+=order.getRemainingQty();
+                levelQty+=order->getRemainingQty();
             }
 
             levels.push_back({levelPrice , levelQty});
@@ -117,7 +118,7 @@ public:
             auto &levelPrice = level.first;
             long long levelQty = 0;
             for(auto &order : orders){
-                levelQty+=order.getRemainingQty();
+                levelQty+=order->getRemainingQty();
             }
 
             levels.push_back({levelPrice , levelQty});
@@ -137,6 +138,6 @@ public:
 
 
 private:
-    std::map<double,std::deque<Order>,std::greater<double>> bids;
-    std::map<double,std::deque<Order>> asks;
+    std::map<double,std::deque<std::shared_ptr<Order>>,std::greater<double>> bids;
+    std::map<double,std::deque<std::shared_ptr<Order>>> asks;
 };
