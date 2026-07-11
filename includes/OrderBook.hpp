@@ -37,9 +37,7 @@ public:
         
         return asks.begin()->first;
     }
-
-
-    // Returns a order pointer so we need to dereference
+  
     std::shared_ptr<Order> getBestBuyOrder(){
         if(bids.empty()){
             return nullptr;
@@ -54,6 +52,7 @@ public:
         return asks.begin()->second[0];
     }
 
+    
     void removeFilledOrders(){
         for(auto levelit = bids.begin();levelit!=bids.end();){
             auto &level =*levelit;
