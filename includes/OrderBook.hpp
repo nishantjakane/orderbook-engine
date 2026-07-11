@@ -3,7 +3,7 @@
 #include <map>
 #include <deque>
 #include <functional>
-#include<optional>
+#include <optional>
 #include <vector>
 #include <memory>
 
@@ -11,7 +11,7 @@
 
 class OrderBook{
 public:
-    void addOrder(std::shared_ptr<Order> &order){
+    void addOrder(const std::shared_ptr<Order> &order){
         auto side = order->getSide();
         auto price = order->getPrice();
 
@@ -38,21 +38,21 @@ public:
         return asks.begin()->first;
     }
   
-    std::shared_ptr<Order> getBestBuyOrder(){
+    std::shared_ptr<Order> getBestBuyOrder() const{
         if(bids.empty()){
             return nullptr;
         }
         return bids.begin()->second[0];
     }
 
-    std::shared_ptr<Order> getBestSellOrder(){
+    std::shared_ptr<Order> getBestSellOrder() const{
         if(asks.empty()){
             return nullptr;
         }
         return asks.begin()->second[0];
     }
 
-    
+
     void removeFilledOrders(){
         for(auto levelit = bids.begin();levelit!=bids.end();){
             auto &level =*levelit;
@@ -127,11 +127,11 @@ public:
     }
 
 
-    bool isEmptyBids(){
+    bool isEmptyBids() const{
         return bids.empty();
     }
 
-    bool isEmptyAsks(){
+    bool isEmptyAsks() const{
         return asks.empty();
     }
 
