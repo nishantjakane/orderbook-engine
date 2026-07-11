@@ -15,6 +15,13 @@ enum class Side
     Sell
 };
 
+enum class OrderStatus
+{
+    Active,
+    Filled,
+    Cancelled
+};
+
 class Order
 {
 public:
@@ -86,6 +93,9 @@ public:
         }
 
         remainingQty -= qty;
+        if(remainingQty ==0){
+            status = OrderStatus::Filled;
+        }
         return true;
     }
 
@@ -98,6 +108,7 @@ private:
     double price;
     OrderType type;
     Side side;
+    OrderStatus status = OrderStatus::Active;
     long long sequence;
     std::chrono::system_clock::time_point timestamp;
 };
