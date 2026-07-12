@@ -69,6 +69,23 @@ public:
         }
     }
 
+        bool cancelOrder(const std::shared_ptr<Order>& order) {
+            if (order->isFilled()){
+                return false;
+            }
+
+            if (order->getStatus() == OrderStatus::Cancelled){
+                return false;
+            }
+
+            if (!orderBook.removeOrder(order)){
+                return false;
+            }
+
+            order->cancelOrder();
+            return true;
+        }
+
 
 private:
 
