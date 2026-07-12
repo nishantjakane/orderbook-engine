@@ -86,6 +86,10 @@ public:
 
     auto getStatus() const { return status;}
 
+    void cancelOrder() {
+        status = OrderStatus::Cancelled;
+    }
+
     // Methods
     bool execute(long long qty)
     {
