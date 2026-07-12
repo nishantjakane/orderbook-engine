@@ -25,13 +25,17 @@ public:
     const std::vector<Trade> &getTrades() const{
         return trades;
     }
+    
+    const std::vector<std::shared_ptr<Order>>& getOrderHistory() const{ 
+        return orderHistory;
+    }
+
 
     void submitOrder(const std::shared_ptr<Order> &order){
         auto side = order->getSide();
-        auto price = order->getPrice();
         auto orderType = order->getOrderType();
 
-
+        orderHistory.push_back(order);
         // Limit order logic
         if(orderType==OrderType::Limit){
             if (side == Side::Buy){
@@ -69,27 +73,51 @@ public:
         }
     }
 
-        bool cancelOrder(const std::shared_ptr<Order>& order) {
-            if (order->isFilled()){
-                return false;
-            }
-
-            if (order->getStatus() == OrderStatus::Cancelled){
-                return false;
-            }
-
-            if (!orderBook.removeOrder(order)){
-                return false;
-            }
-
-            order->cancelOrder();
-            return true;
+    bool cancelOrder(const std::shared_ptr<Order>& order) {
+        if (order->isFilled()){
+            return false;
         }
+
+        if (order->getStatus() == OrderStatus::Cancelled){
+            return false;
+        }
+
+        if (!orderBook.removeOrder(order)){
+            return false;
+        }
+
+        order->cancelOrder();
+        return true;
+    }
+
+    std::shared_ptr<Order> modifyOrder(const std::shared_ptr<Order>& order,long long newQty,double newPrice,Side newSide){
+        if(!order||order->isFilled()||order->isCancelled()){
+            return nullptr;
+        }
+
+        if (!cancelOrder(order)){
+            return nullptr;
+        }
+        
+        auto newOrder = std::make_shared<Order>(
+            generateOrderId(),
+            newQty,
+            newPrice,
+            order->getOrderType(),
+            newSide,
+            generateSequence(),
+            std::chrono::system_clock::now()
+        );
+        submitOrder(newOrder);
+
+        return newOrder;
+    }
 
 
 private:
 
     OrderBook orderBook;
+    std::vector<std::shared_ptr<Order>> orderHistory;
 
     std::vector<Trade> trades;
 
