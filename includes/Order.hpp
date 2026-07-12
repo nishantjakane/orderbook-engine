@@ -84,6 +84,8 @@ public:
         return sequence;
     }
 
+    auto getStatus() const { return status;}
+
     // Methods
     bool execute(long long qty)
     {
