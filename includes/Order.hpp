@@ -106,6 +106,7 @@ public:
     }
 
     bool isFilled() const {return remainingQty==0;}
+    bool isCancelled() const { return status==OrderStatus::Cancelled;}
 
 private:
     std::string id;
