@@ -135,6 +135,47 @@ public:
         return asks.empty();
     }
 
+    bool removeOrder(const std::shared_ptr<Order> &order) {
+        if(order->getSide()==Side::Buy){
+            auto levelIt = bids.find(order->getPrice());
+            if(levelIt==bids.end()){
+                return false;
+            }
+            auto &orders = levelIt->second;
+            for(auto it = orders.begin();it!=orders.end();){
+                if(*it == order){
+                    it = orders.erase(it);
+                    if(orders.empty()){
+                        bids.erase(levelIt);
+                    }
+                    return true;
+                }else{
+                    ++it;
+                }
+            }
+        }else if(order->getSide()==Side::Sell){
+            auto levelIt = asks.find(order->getPrice()); 
+            if(levelIt==asks.end()){
+                return false;
+            }
+            auto &orders = levelIt->second;
+            for(auto it = orders.begin();it!=orders.end();){
+                if(*it == order){
+                    it = orders.erase(it);
+                    if(orders.empty()){
+                        asks.erase(levelIt);
+                    }
+                    return true;
+                }else{
+                    ++it;
+                }
+            }
+        }
+
+
+        return false;
+    }
+
 
 private:
     std::map<double,std::deque<std::shared_ptr<Order>>,std::greater<double>> bids;
