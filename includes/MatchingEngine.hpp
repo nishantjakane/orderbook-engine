@@ -90,7 +90,7 @@ public:
         return true;
     }
 
-    std::shared_ptr<Order> modifyOrder(const std::shared_ptr<Order>& order,long long newQty,double newPrice,Side newSide){
+    std::shared_ptr<Order> modifyOrder(const std::shared_ptr<Order>& order,long long newQty,double newPrice){
         if(!order||order->isFilled()||order->isCancelled()){
             return nullptr;
         }
@@ -104,7 +104,7 @@ public:
             newQty,
             newPrice,
             order->getOrderType(),
-            newSide,
+            order->getSide(),
             generateSequence(),
             std::chrono::system_clock::now()
         );
