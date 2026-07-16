@@ -6,7 +6,9 @@
 enum class OrderType
 {
     Market,
-    Limit
+    Limit,
+    IOC,
+    FillOrKill
 };
 
 enum class Side

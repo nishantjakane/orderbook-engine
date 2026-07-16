@@ -49,7 +49,20 @@ void MatchingEngine::submitOrder(const std::shared_ptr<Order> &order)
         {
             matchSell(order);
         }
-    }    
+    }
+
+    else if (orderType == OrderType::IOC)
+    {
+        if (side == Side::Buy)
+        {
+            matchBuy(order);
+        }
+        else if (side == Side::Sell)
+        {
+            matchSell(order);
+        }
+    }
+
 }
 
 bool MatchingEngine::cancelOrder(const std::shared_ptr<Order> &order)
@@ -116,7 +129,6 @@ void MatchingEngine::executeTrade(const std::shared_ptr<Order> &order, const std
             std::chrono::system_clock::now());
         trades.push_back(trade);
 
-        orderBook.updateBidLevel(order->getPrice(),tradeQty);
         orderBook.updateAskLevel(bestMatchingOrder->getPrice(),tradeQty);
         order->execute(tradeQty);
         bestMatchingOrder->execute(tradeQty);
@@ -135,7 +147,6 @@ void MatchingEngine::executeTrade(const std::shared_ptr<Order> &order, const std
         trades.push_back(trade);
         
         orderBook.updateBidLevel(bestMatchingOrder->getPrice(),tradeQty);
-        orderBook.updateAskLevel(order->getPrice(),tradeQty);
 
         order->execute(tradeQty);
         bestMatchingOrder->execute(tradeQty);
