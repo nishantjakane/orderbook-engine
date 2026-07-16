@@ -9,10 +9,12 @@ void OrderBook::addOrder(const std::shared_ptr<Order> &order)
     if (side == Side::Buy)
     {
         bids[price].push_back(order);
+        bidLevels[price]+=order->getRemainingQty();
     }
     else if (side == Side::Sell)
     {
         asks[price].push_back(order);
+        askLevels[price]+=order->getRemainingQty();
     }
 }
 
@@ -73,49 +75,12 @@ void OrderBook::removeFilledOrders()
     }
 }
 
-std::vector<std::pair<double, long long>> OrderBook::getBidsLevels() const
-{
-    std::vector<std::pair<double, long long>> levels;
-    for (const auto &level : bids)
-    {
-        auto &orders = level.second;
-        auto &levelPrice = level.first;
-        long long levelQty = 0;
-        for (auto &order : orders)
-        {
-            levelQty += order->getRemainingQty();
-        }
-
-        levels.push_back({levelPrice, levelQty});
-    }
-
-    return levels;
-}
-
-std::vector<std::pair<double, long long>> OrderBook::getAsksLevels() const
-{
-    std::vector<std::pair<double, long long>> levels;
-    for (const auto &level : asks)
-    {
-        auto &orders = level.second;
-        auto &levelPrice = level.first;
-        long long levelQty = 0;
-        for (auto &order : orders)
-        {
-            levelQty += order->getRemainingQty();
-        }
-
-        levels.push_back({levelPrice, levelQty});
-    }
-
-    return levels;
-}
-
 bool OrderBook::removeOrder(const std::shared_ptr<Order> &order)
 {
+    double price = order->getPrice();
     if (order->getSide() == Side::Buy)
     {
-        auto levelIt = bids.find(order->getPrice());
+        auto levelIt = bids.find(price);
         if (levelIt == bids.end())
         {
             return false;
@@ -126,6 +91,8 @@ bool OrderBook::removeOrder(const std::shared_ptr<Order> &order)
             if (*it == order)
             {
                 it = orders.erase(it);
+                updateBidLevel(price,order->getRemainingQty());
+
                 if (orders.empty())
                 {
                     bids.erase(levelIt);
@@ -140,7 +107,7 @@ bool OrderBook::removeOrder(const std::shared_ptr<Order> &order)
     }
     else if (order->getSide() == Side::Sell)
     {
-        auto levelIt = asks.find(order->getPrice());
+        auto levelIt = asks.find(price);
         if (levelIt == asks.end())
         {
             return false;
@@ -151,6 +118,9 @@ bool OrderBook::removeOrder(const std::shared_ptr<Order> &order)
             if (*it == order)
             {
                 it = orders.erase(it);
+
+                updateAskLevel(price,order->getRemainingQty());
+
                 if (orders.empty())
                 {
                     asks.erase(levelIt);
@@ -165,4 +135,22 @@ bool OrderBook::removeOrder(const std::shared_ptr<Order> &order)
     }
 
     return false;
+}
+
+// Levels helper funcs
+void OrderBook::updateBidLevel(double price,long long deltaQty){
+    bidLevels[price]-=deltaQty;
+    
+    
+    if (bidLevels[price]==0){
+        bidLevels.erase(price);
+    }
+}
+
+void OrderBook::updateAskLevel(double price,long long deltaQty){
+    askLevels[price]-=deltaQty;
+
+    if(askLevels[price]==0){
+        askLevels.erase(price);
+    }
 }

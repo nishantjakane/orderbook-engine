@@ -49,7 +49,7 @@ void MatchingEngine::submitOrder(const std::shared_ptr<Order> &order)
         {
             matchSell(order);
         }
-    }
+    }    
 }
 
 bool MatchingEngine::cancelOrder(const std::shared_ptr<Order> &order)
@@ -116,8 +116,11 @@ void MatchingEngine::executeTrade(const std::shared_ptr<Order> &order, const std
             std::chrono::system_clock::now());
         trades.push_back(trade);
 
+        orderBook.updateBidLevel(order->getPrice(),tradeQty);
+        orderBook.updateAskLevel(bestMatchingOrder->getPrice(),tradeQty);
         order->execute(tradeQty);
         bestMatchingOrder->execute(tradeQty);
+
     }
     else if (orderSide == Side::Sell)
     {
@@ -130,6 +133,9 @@ void MatchingEngine::executeTrade(const std::shared_ptr<Order> &order, const std
             sequenceGenerator.generate(),
             std::chrono::system_clock::now());
         trades.push_back(trade);
+        
+        orderBook.updateBidLevel(bestMatchingOrder->getPrice(),tradeQty);
+        orderBook.updateAskLevel(order->getPrice(),tradeQty);
 
         order->execute(tradeQty);
         bestMatchingOrder->execute(tradeQty);
@@ -143,7 +149,7 @@ void MatchingEngine::matchBuy(const std::shared_ptr<Order> &order)
     while (!(orderBook.isEmptyAsks() || order->isFilled()))
     {
         auto bestSellOrder = orderBook.getBestSellOrder();
-        if ((order->getPrice() < bestSellOrder->getPrice()) && orderType == OrderType::Limit)
+        if ((order->getPrice() < bestSellOrder->getPrice()) && (orderType == OrderType::Limit || orderType == OrderType::IOC))
         {
             break;
         }
@@ -162,7 +168,7 @@ void MatchingEngine::matchSell(const std::shared_ptr<Order> &order)
     {
         auto bestBuyOrder = orderBook.getBestBuyOrder();
 
-        if ((order->getPrice() > bestBuyOrder->getPrice()) && orderType == OrderType::Limit)
+        if ((order->getPrice() > bestBuyOrder->getPrice()) && (orderType == OrderType::Limit || orderType == OrderType::IOC))
         {
             break;
         }

@@ -17,7 +17,6 @@ public:
         if(bids.empty()){
             return std::nullopt;
         }
-
         return bids.begin()->first;
     }
 
@@ -46,9 +45,13 @@ public:
 
     void removeFilledOrders();
 
-    std::vector<std::pair<double, long long>> getBidsLevels() const;
+    std::map<double, long long,std::greater<double>> getBidsLevels() const{
+        return bidLevels;
+    };
 
-    std::vector<std::pair<double, long long>> getAsksLevels() const;
+    std::map<double, long long> getAsksLevels() const{
+        return askLevels;
+    };
 
     bool isEmptyBids() const{
         return bids.empty();
@@ -60,8 +63,16 @@ public:
 
     bool removeOrder(const std::shared_ptr<Order> &order);
 
+    //Levels update helper funcs
+    void updateBidLevel(double price,long long deltaQty);
+    void updateAskLevel(double price,long long deltaQty);
+
 
 private:
     std::map<double,std::deque<std::shared_ptr<Order>>,std::greater<double>> bids;
     std::map<double,std::deque<std::shared_ptr<Order>>> asks;
+
+    std::map<double, long long, std::greater<double>> bidLevels;
+    std::map<double, long long> askLevels;
+
 };
