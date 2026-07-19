@@ -8,6 +8,7 @@ void MatchingEngine::submitOrder(const std::shared_ptr<Order> &order)
     auto orderType = order->getOrderType();
 
     orderHistory.push_back(order);
+    ordersById[order->getId()] = order;
     // Limit order logic
     if (orderType == OrderType::Limit)
     {
@@ -236,5 +237,16 @@ void MatchingEngine::matchSell(const std::shared_ptr<Order> &order)
         executeTrade(order, bestBuyOrder, Side::Sell);
 
         orderBook.removeFilledOrders();
+    }
+}
+
+std::shared_ptr<Order> MatchingEngine::findOrder(const std::string &orderId) const {
+    auto it = ordersById.find(orderId);
+
+    if(it == ordersById.end()){
+        return nullptr;
+    }
+    else{
+        return it->second;
     }
 }

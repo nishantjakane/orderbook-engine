@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <memory>
+#include <unordered_map>
 
 #include "Order.hpp"
 #include "OrderBook.hpp"
@@ -40,12 +41,16 @@ public:
 
     std::shared_ptr<Order> modifyOrder(const std::shared_ptr<Order>& order,long long newQty,double newPrice);
 
+    std::shared_ptr<Order> findOrder(const std::string &orderId) const;
+
 private:
 
     OrderBook orderBook;
     std::vector<std::shared_ptr<Order>> orderHistory;
 
     std::vector<Trade> trades;
+
+    std::unordered_map<std::string, std::shared_ptr<Order>> ordersById;
 
     IdGenerator tradeIdGenerator;
     IdGenerator sequenceGenerator;
