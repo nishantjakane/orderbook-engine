@@ -21,7 +21,8 @@ enum class OrderStatus
 {
     Active,
     Filled,
-    Cancelled
+    Cancelled,
+    Killed
 };
 
 class Order
@@ -90,6 +91,10 @@ public:
 
     void cancelOrder() {
         status = OrderStatus::Cancelled;
+    }
+
+    void killOrder(){
+        status = OrderStatus::Killed;
     }
 
     // Methods
