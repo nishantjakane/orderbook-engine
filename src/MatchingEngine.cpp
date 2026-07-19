@@ -51,6 +51,8 @@ void MatchingEngine::submitOrder(const std::shared_ptr<Order> &order)
         }
     }
 
+    //Same as Limit but remaining unfilled qty is not added to orderbook
+
     else if (orderType == OrderType::IOC)
     {
         if (side == Side::Buy)
@@ -60,6 +62,53 @@ void MatchingEngine::submitOrder(const std::shared_ptr<Order> &order)
         else if (side == Side::Sell)
         {
             matchSell(order);
+        }
+    }
+    else if(orderType == OrderType::FillOrKill)
+    {
+        double price = order->getPrice();
+
+        if(side == Side::Buy)
+        {
+            auto askLevels = orderBook.getAsksLevels();
+            auto qty = order->getQty();
+            long long fillingQty=0;
+
+            auto it = askLevels.begin();
+
+            while(it != askLevels.end()&&!orderBook.isEmptyAsks()&&fillingQty<qty&&it->first<=price)
+            {
+                fillingQty+=it->second;
+                ++it;
+            }
+
+            if(fillingQty>=qty){
+                matchBuy(order);
+            }else{
+                order->killOrder();
+            }
+
+        }
+        else if(side == Side::Sell)
+        {
+            auto bidLevels = orderBook.getBidsLevels();
+            auto qty = order->getQty();
+            long long fillingQty=0;
+
+            auto it = bidLevels.begin();
+
+            while(it != bidLevels.end()&&!orderBook.isEmptyBids()&&fillingQty<qty&&it->first>=price)
+            {
+                fillingQty+=it->second;
+                ++it;
+            }
+
+            if(fillingQty>=qty){
+                matchSell(order);
+            }else{
+                order->killOrder();
+            }
+
         }
     }
 
@@ -160,7 +209,7 @@ void MatchingEngine::matchBuy(const std::shared_ptr<Order> &order)
     while (!(orderBook.isEmptyAsks() || order->isFilled()))
     {
         auto bestSellOrder = orderBook.getBestSellOrder();
-        if ((order->getPrice() < bestSellOrder->getPrice()) && (orderType == OrderType::Limit || orderType == OrderType::IOC))
+        if ((order->getPrice() < bestSellOrder->getPrice()) && (orderType == OrderType::Limit || orderType == OrderType::IOC || orderType == OrderType::FillOrKill))
         {
             break;
         }
@@ -179,7 +228,7 @@ void MatchingEngine::matchSell(const std::shared_ptr<Order> &order)
     {
         auto bestBuyOrder = orderBook.getBestBuyOrder();
 
-        if ((order->getPrice() > bestBuyOrder->getPrice()) && (orderType == OrderType::Limit || orderType == OrderType::IOC))
+        if ((order->getPrice() > bestBuyOrder->getPrice()) && (orderType == OrderType::Limit || orderType == OrderType::IOC|| orderType == OrderType::FillOrKill))
         {
             break;
         }
