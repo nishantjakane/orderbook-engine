@@ -18,19 +18,17 @@ A lightweight **C++ limit order book and matching engine** built from scratch to
 The engine maintains separate bid and ask books and matches incoming orders according to **price-time priority**.
 
 ```text
-ASKS
-100.20 → 80
-100.10 → 120
-
-100.00 → 150
-──────────────
-  BID / ASK
-──────────────
- 99.90 → 100
- 99.80 → 200
+          ASK (SELL)
+          100.20 × 80
+          100.10 × 120
+          ───────────
+          100.00 × 150
+          99.90  × 100
+          99.80  × 200
+          BID (BUY)
 ```
 
-An incoming buy order at `100.10` can consume liquidity from the ask side until its quantity is filled or no longer crosses the book.
+The **best ask** is the lowest sell price, while the **best bid** is the highest buy price. Incoming orders that cross the spread are matched against available liquidity.
 
 ## Performance
 
